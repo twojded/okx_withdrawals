@@ -3,7 +3,7 @@
 Export full withdrawal history from OKX with deep pagination. Streams results to CSV (default) or JSONL and supports currency/time filters and address filtering.
 
 ## Setup
-
+```
 git clone https://github.com/twojded/okx_withdrawals
 cd ~/okx_withdrawals/
 python3 -m venv .venv
