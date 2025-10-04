@@ -19,10 +19,10 @@ Optional:
 Examples:
   # Everything (all currencies) -> CSV:
   export OKX_KEY=... OKX_SECRET=... OKX_PASSPHRASE=...
-  python okx.py --out withdrawals.csv
+  python okx_.py --out withdrawals.csv
 
   # Only USDT in 2023 -> JSONL:
-  python okx.py --ccy USDT --start 2023-01-01 --end 2023-12-31 \
+  python okx_.py --ccy USDT --start 2023-01-01 --end 2023-12-31 \
       --fmt jsonl --out withdrawals_2023.jsonl
 """
 import argparse
@@ -62,6 +62,15 @@ LIMIT = 100  # OKX maximum for this endpoint
 def iso_utc_now_ms() -> str:
     """OK-ACCESS-TIMESTAMP in ISO8601 with milliseconds and 'Z'."""
     return dt.datetime.utcnow().isoformat(timespec="milliseconds") + "Z"
+
+
+def ts_ms_to_iso(ms: int | str) -> str:
+    """Convert Unix ms to ISO 'YYYY-MM-DD HH:MM:SS' UTC."""
+    try:
+        val = int(ms)
+        return dt.datetime.fromtimestamp(val / 1000, tz=dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return ""
 
 
 def sign(secret: str, timestamp: str, method: str, request_path: str, body: str = "") -> str:
@@ -201,11 +210,18 @@ def dump_withdrawals(
                 # no more pages
                 break
 
-            # OKX returns newest -> older. Apply start_ms filter if set.
-            if start_ms is not None:
-                rows = [r for r in rows_all if int(r.get("ts", "0")) >= start_ms]
-            else:
-                rows = rows_all
+            # OKX returns newest -> older. Apply client-side time window filters
+            def within_time_window(r: dict) -> bool:
+                try:
+                    ts_val = int(r.get("ts", "0"))
+                except Exception:
+                    return False
+                if start_ms is not None and ts_val < start_ms:
+                    return False
+                if end_ms is not None and ts_val > end_ms:
+                    return False
+                return True
+            rows = [r for r in rows_all if within_time_window(r)]
 
             # Фильтрация по адресам из addr_set (если задано)
             if addr_set:
@@ -231,7 +247,7 @@ def dump_withdrawals(
             if saved == 0:
                 # union of keys + common keys in stable order
                 base_keys = [
-                    "wdId", "ts", "ccy", "amt", "state", "fee", "feeCcy",
+                    "wdId", "ts", "ts_iso", "ccy", "amt", "state", "fee", "feeCcy",
                     "chain", "txId", "to", "toAddrType", "from", "areaCodeFrom",
                     "areaCodeTo", "nonTradableAsset", "clientId", "note", "tag",
                     "pmtId", "memo", "addrEx"
@@ -251,9 +267,16 @@ def dump_withdrawals(
                     # addrEx might be an object — stringify as JSON
                     if isinstance(r.get("addrEx"), (dict, list)):
                         r = {**r, "addrEx": json.dumps(r["addrEx"], ensure_ascii=False)}
+                    # add ISO time column from ts, if present
+                    if "ts_iso" not in r:
+                        r_ts = r.get("ts", "")
+                        r = {**r, "ts_iso": ts_ms_to_iso(r_ts)}
                     write_csv_row(csv_writer, r, field_order)
             else:
                 for r in rows:
+                    if "ts_iso" not in r:
+                        r_ts = r.get("ts", "")
+                        r = {**r, "ts_iso": ts_ms_to_iso(r_ts)}
                     f_out.write(json.dumps(r, ensure_ascii=False) + "\n")
 
             saved += len(rows)
@@ -313,6 +336,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
