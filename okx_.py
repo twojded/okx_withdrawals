@@ -19,10 +19,10 @@ Optional:
 Examples:
   # Everything (all currencies) -> CSV:
   export OKX_KEY=... OKX_SECRET=... OKX_PASSPHRASE=...
-  python okx_.py --out withdrawals.csv
+  python okx.py --out withdrawals.csv
 
   # Only USDT in 2023 -> JSONL:
-  python okx_.py --ccy USDT --start 2023-01-01 --end 2023-12-31 \
+  python okx.py --ccy USDT --start 2023-01-01 --end 2023-12-31 \
       --fmt jsonl --out withdrawals_2023.jsonl
 """
 import argparse
@@ -313,3 +313,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
