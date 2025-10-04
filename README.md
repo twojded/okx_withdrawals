@@ -22,22 +22,22 @@ Optional env:
 
 Basic:
 ```
-python okx_.py --out withdrawals.csv
+python okx.py --out withdrawals.csv
 ```
 
 Currency and time window (UTC):
 ```
-python okx_.py --out withdrawals_usdt_2023.csv --ccy USDT --start 2023-01-01 --end 2023-12-31
+python okx.py --out withdrawals_usdt_2023.csv --ccy USDT --start 2023-01-01 --end 2023-12-31
 ```
 
 Address filtering (write only rows containing any address from file):
 ```
-python okx_.py --out withdrawals_filtered.csv --addr-file wallets.txt
+python okx.py --out withdrawals_filtered.csv --addr-file wallets.txt
 ```
 
 Replicate the exact run used in this repo (ETH, 2023‑11‑29..2023‑12‑03, with address filter):
 ```
-python okx_.py \
+python okx.py \
   --out withdrawals_eth_20231129_20231203_filtered.csv \
   --ccy ETH \
   --start "2023-11-29 00:00:00" \
