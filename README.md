@@ -4,7 +4,8 @@ Export full withdrawal history from OKX with deep pagination. Streams results to
 
 ## Setup
 
-```
+git clone https://github.com/twojded/okx_withdrawals
+cd ~/okx_withdrawals/
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
